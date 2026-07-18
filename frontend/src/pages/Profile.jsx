@@ -1,10 +1,27 @@
 import TopAppBar from '../components/layout/TopAppBar';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import careerGoalService from '../services/careerGoalService';
 
 const Profile = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userName = user?.fullName || 'Complete your profile';
   const userEmail = user?.email || 'No email provided';
+  const [careerGoal, setCareerGoal] = useState(null);
+
+  useEffect(() => {
+    const fetchGoal = async () => {
+      try {
+        const goal = await careerGoalService.getGoal();
+        setCareerGoal(goal);
+      } catch (err) {
+        console.error("Error fetching career goal on profile", err);
+      }
+    };
+    fetchGoal();
+  }, []);
 
   return (
     <>
@@ -21,7 +38,9 @@ const Profile = () => {
             </div>
             <div className="text-center md:text-left flex-grow">
               <h3 className="font-display-lg text-display-lg text-on-surface mb-1">{userName}</h3>
-              <p className="font-headline-md text-headline-md text-primary font-semibold mb-4">Data Science Aspirant</p>
+              <p className="font-headline-md text-headline-md text-primary font-semibold mb-4">
+                {careerGoal ? `${careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} Aspirant` : "Career Goal Not Set"}
+              </p>
               <div className="flex flex-wrap justify-center md:justify-start gap-3">
                 <span className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-lg text-on-surface-variant font-label-md text-label-md">
                   <span className="material-symbols-outlined text-[18px]">mail</span>
@@ -189,13 +208,19 @@ const Profile = () => {
               <div className="space-y-1">
                 <h4 className="font-headline-md text-headline-md">Career Goal</h4>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  <p className="font-body-md text-body-md text-on-surface-variant"><span className="font-bold text-on-surface">Preferred Role:</span> Data Scientist</p>
-                  <p className="font-body-md text-body-md text-on-surface-variant"><span className="font-bold text-on-surface">Preferred Company:</span> Google</p>
-                  <p className="font-body-md text-body-md text-on-surface-variant"><span className="font-bold text-on-surface">Created On:</span> Oct 15, 2024</p>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-bold text-on-surface">Preferred Role:</span> {careerGoal ? careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Not Set'}
+                  </p>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-bold text-on-surface">Preferred Company:</span> {careerGoal?.preferredCompany || 'Any'}
+                  </p>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-bold text-on-surface">Graduation:</span> {careerGoal?.graduationYear || 'Not Set'}
+                  </p>
                 </div>
               </div>
             </div>
-            <button className="flex items-center gap-2 px-6 py-2 border border-outline text-on-surface font-bold text-label-md rounded-lg hover:bg-surface-container transition-colors">
+            <button onClick={() => navigate('/goal')} className="flex items-center gap-2 px-6 py-2 border border-outline text-on-surface font-bold text-label-md rounded-lg hover:bg-surface-container transition-colors">
               <span className="material-symbols-outlined text-[18px]">edit</span>
               Edit
             </button>

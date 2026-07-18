@@ -9,19 +9,28 @@
  *  - deleteGoal(id) → DELETE /api/career-goals/{id}
  */
 
+import axiosInstance from '../utils/axiosInstance';
+
 const careerGoalService = {
-  getGoals: async () => {
-    throw new Error('Not implemented – coming in Milestone 2')
+  getGoal: async () => {
+    try {
+      const response = await axiosInstance.get('/api/career-goals/me');
+      return response.data;
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return null; // Handle not found gracefully, just means no goal is set yet
+      }
+      throw error;
+    }
   },
-  createGoal: async (data) => {
-    throw new Error('Not implemented – coming in Milestone 2')
+  saveGoal: async (data) => {
+    const response = await axiosInstance.post('/api/career-goals', data);
+    return response.data;
   },
-  updateGoal: async (id, data) => {
-    throw new Error('Not implemented – coming in Milestone 2')
-  },
-  deleteGoal: async (id) => {
-    throw new Error('Not implemented – coming in Milestone 2')
-  },
+  deleteGoal: async () => {
+    const response = await axiosInstance.delete('/api/career-goals/me');
+    return response.data;
+  }
 }
 
 export default careerGoalService

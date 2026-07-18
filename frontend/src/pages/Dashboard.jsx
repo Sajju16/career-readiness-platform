@@ -1,11 +1,26 @@
 import TopAppBar from '../components/layout/TopAppBar';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
+import careerGoalService from '../services/careerGoalService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const firstName = user?.fullName?.split(' ')[0] || 'User';
+  const [careerGoal, setCareerGoal] = useState(null);
+
+  useEffect(() => {
+    const fetchGoal = async () => {
+      try {
+        const goal = await careerGoalService.getGoal();
+        setCareerGoal(goal);
+      } catch (err) {
+        console.error("Error fetching career goal on dashboard", err);
+      }
+    };
+    fetchGoal();
+  }, []);
 
   return (
     <>
@@ -25,10 +40,13 @@ const Dashboard = () => {
               <span className="material-symbols-outlined text-[120px]">rocket_launch</span>
             </div>
             <div className="relative z-10">
-              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">Career Goal: Data Scientist</h2>
+              <h2 className="font-headline-md text-headline-md text-on-surface mb-2">
+                {careerGoal ? `Career Goal: ${careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}` : "Career Goal: Not Set"}
+              </h2>
               <p className="font-body-md text-on-surface-variant mb-6 max-w-lg">
-                Your profile is currently 84% aligned with Google's requirements for a Data Scientist role. 
-                Complete your learning path to close the remaining skill gaps.
+                {careerGoal 
+                  ? `Your profile is being analyzed for a ${careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} role.`
+                  : "Set a career goal to get a personalized readiness analysis and learning roadmap."}
               </p>
               <div className="flex flex-wrap gap-4">
                 <button 
