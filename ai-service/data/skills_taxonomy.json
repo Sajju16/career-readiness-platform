@@ -1,0 +1,13 @@
+{
+  "_comment": "Placeholder – Skills taxonomy will be populated in Milestone 3.",
+  "_description": "Maps career domains to their required skills. Used by skill_extractor.py.",
+  "domains": {
+    "Web Development": [],
+    "Data Science": [],
+    "Machine Learning": [],
+    "DevOps": [],
+    "Mobile Development": [],
+    "Cybersecurity": [],
+    "Cloud Computing": []
+  }
+}

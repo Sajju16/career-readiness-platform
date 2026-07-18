@@ -1,0 +1,16 @@
+# ============================================================
+# AI-Based Career Readiness – Development Profile
+# This file overrides application.yml for local dev only.
+# ============================================================
+
+spring:
+  jpa:
+    show-sql: true              # Show SQL queries in console during dev
+    hibernate:
+      ddl-auto: validate        # Use validate since Flyway manages schema
+
+logging:
+  level:
+    com.careerready: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG

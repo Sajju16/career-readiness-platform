@@ -1,0 +1,105 @@
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup batch script, version 3.3.2
+# ----------------------------------------------------------------------------
+
+# If JAVA_HOME is not set we try to find it
+if [ -z "$JAVA_HOME" ]; then
+  # Try to detect via java command
+  if command -v java >/dev/null 2>&1; then
+    JAVA_CMD=$(command -v java)
+  else
+    echo "Error: JAVA_HOME is not set and no 'java' command could be found." >&2
+    echo "Please set JAVA_HOME or ensure java is on your PATH." >&2
+    exit 1
+  fi
+else
+  JAVA_CMD="$JAVA_HOME/bin/java"
+fi
+
+if [ ! -x "$JAVA_CMD" ]; then
+  echo "Error: JAVA_HOME is set to an invalid directory: $JAVA_HOME" >&2
+  exit 1
+fi
+
+# Determine project base directory (where .mvn folder lives)
+MAVEN_PROJECTBASEDIR=""
+
+# Try to find .mvn directory by walking up
+PRG="$0"
+while [ -L "$PRG" ]; do
+  ls=$(ls -ld "$PRG")
+  link=$(expr "$ls" : '.*-> \(.*\)$')
+  if expr "$link" : '/.*' >/dev/null; then
+    PRG="$link"
+  else
+    PRG="$(dirname "$PRG")/$link"
+  fi
+done
+SAVED="$(pwd)"
+cd "$(dirname "$PRG")" >/dev/null
+SCRIPT_DIR="$(pwd -P)"
+cd "$SAVED" >/dev/null
+
+WDIR="$SCRIPT_DIR"
+while true; do
+  if [ -d "$WDIR/.mvn" ]; then
+    MAVEN_PROJECTBASEDIR="$WDIR"
+    break
+  fi
+  PARENT=$(dirname "$WDIR")
+  if [ "$PARENT" = "$WDIR" ]; then
+    MAVEN_PROJECTBASEDIR="$SCRIPT_DIR"
+    break
+  fi
+  WDIR="$PARENT"
+done
+
+# Wrapper jar location
+MAVEN_WRAPPER_JAR="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.jar"
+MAVEN_WRAPPER_PROPERTIES="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.properties"
+
+# Download maven-wrapper.jar if missing
+if [ ! -f "$MAVEN_WRAPPER_JAR" ]; then
+  # Extract wrapperUrl from properties
+  WRAPPER_URL=$(grep -E '^wrapperUrl=' "$MAVEN_WRAPPER_PROPERTIES" | cut -d= -f2-)
+  if [ -n "$WRAPPER_URL" ]; then
+    echo "Downloading maven-wrapper.jar from: $WRAPPER_URL"
+    if command -v curl >/dev/null 2>&1; then
+      curl -o "$MAVEN_WRAPPER_JAR" "$WRAPPER_URL" -f -L
+    elif command -v wget >/dev/null 2>&1; then
+      wget -O "$MAVEN_WRAPPER_JAR" "$WRAPPER_URL"
+    else
+      echo "Error: curl or wget required to download maven-wrapper.jar" >&2
+      exit 1
+    fi
+  fi
+fi
+
+# Execute Maven via the wrapper
+exec "$JAVA_CMD" \
+  $JVM_CONFIG_MAVEN_PROPS \
+  $MAVEN_OPTS \
+  $MAVEN_DEBUG_OPTS \
+  -classpath "$MAVEN_WRAPPER_JAR" \
+  "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" \
+  org.apache.maven.wrapper.MavenWrapperMain "$@"
