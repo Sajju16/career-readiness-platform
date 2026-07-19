@@ -44,5 +44,6 @@ async def root():
     }
 
 # TODO (Milestone 3): Register extract router
-# TODO (Milestone 4): Register analyze router
+from app.routers import analyze
+app.include_router(analyze.router)
 # TODO (Milestone 5): Register roadmap router

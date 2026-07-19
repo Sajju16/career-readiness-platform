@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import careerGoalService from '../services/careerGoalService';
 import resumeService from '../services/resumeService';
+import analysisService from '../services/analysisService';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -12,42 +13,75 @@ const Profile = () => {
   const userEmail = user?.email || 'No email provided';
   const [careerGoal, setCareerGoal] = useState(null);
   const [resume, setResume] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchGoal = async () => {
+    const fetchData = async () => {
       try {
-        const goal = await careerGoalService.getGoal();
+        const [goal, res, an] = await Promise.all([
+          careerGoalService.getGoal().catch(() => null),
+          resumeService.getResume().catch(() => null),
+          analysisService.getAnalysis().catch(() => null)
+        ]);
         setCareerGoal(goal);
+        setResume(res);
+        setAnalysis(an);
       } catch (err) {
-        console.error("Error fetching career goal on profile", err);
+        console.error("Error fetching data on profile", err);
       }
     };
-    
-    const fetchResume = async () => {
-      try {
-        const existingResume = await resumeService.getResume();
-        setResume(existingResume);
-      } catch (err) {
-        console.error("Error fetching resume on profile", err);
-      }
-    };
-    
-    fetchGoal();
-    fetchResume();
+    fetchData();
   }, []);
+
+  const handleRunAnalysis = async () => {
+    setAnalyzing(true);
+    setError('');
+    try {
+      const result = await analysisService.analyzeResume();
+      setAnalysis(result);
+    } catch (err) {
+      setError(err.response?.data || 'Failed to analyze resume. Please ensure you have uploaded a resume and set a career goal.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return ['#22c55e', '#16a34a']; // Green
+    if (score >= 50) return ['#eab308', '#ca8a04']; // Yellow
+    return ['#ef4444', '#dc2626']; // Red
+  };
+
+  const readinessScore = analysis?.readinessScore ?? 0;
+  const extractedSkills = analysis?.extractedSkills ?? [];
+  const missingSkills = analysis?.missingSkills ?? [];
+  const recommendations = analysis?.recommendations ?? [];
+  const scoreColors = analysis ? getScoreColor(readinessScore) : ['#e5e7eb', '#d1d5db'];
 
   return (
     <>
       <TopAppBar title="Student Profile" />
-      <div className="max-w-container-max mx-auto px-margin-desktop mt-stack-lg">
+      <div className="max-w-container-max mx-auto px-margin-desktop mt-stack-lg pb-10">
+        
+        {error && (
+          <div className="mb-6 p-4 bg-error-container text-on-error-container rounded-lg border border-error/20 flex items-center gap-3">
+            <span className="material-symbols-outlined">error</span>
+            {error}
+          </div>
+        )}
+
         {/* Bento Profile Header */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
           <div className="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4">
-              <span className="px-3 py-1 bg-primary-container/10 text-primary font-bold text-label-sm rounded-full border border-primary/20">AI-VERIFIED</span>
+              <span className="px-3 py-1 bg-primary-container/10 text-primary font-bold text-label-sm rounded-full border border-primary/20">
+                {analysis ? 'AI-VERIFIED' : 'UNVERIFIED'}
+              </span>
             </div>
-            <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-surface shadow-sm shrink-0">
-              <img className="w-full h-full object-cover" alt="Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzqR3eW2PVa1Asukb0RTs-terQqXolYQpTT18R8_YH2xusj0mW_7VPgoXj7oYRjyi62E5Nb-KiBkUZKeqbYozU1sifqJLo4JL1mw2Hooxb_0HmJ-KNtPD9invOD6MQOUokBZFQjJ9eFddX2maYpsQLdtogsAfBTxGzupM9N21LCSzVg4CcPkkawLQW2cFRo4XPWmQ59SfPW4W2SYjZWwkSZ6BJj7-8O4t4EwqB68h5prhIWexOS3K2" />
+            <div className="w-32 h-32 rounded-2xl overflow-hidden border-4 border-surface shadow-sm shrink-0 flex items-center justify-center bg-primary/10">
+              <span className="material-symbols-outlined text-[64px] text-primary">person</span>
             </div>
             <div className="text-center md:text-left flex-grow">
               <h3 className="font-display-lg text-display-lg text-on-surface mb-1">{userName}</h3>
@@ -59,14 +93,6 @@ const Profile = () => {
                   <span className="material-symbols-outlined text-[18px]">mail</span>
                   {userEmail}
                 </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-lg text-on-surface-variant font-label-md text-label-md">
-                  <span className="material-symbols-outlined text-[18px]">link</span>
-                  linkedin.com/in/arivera-ds
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container rounded-lg text-on-surface-variant font-label-md text-label-md">
-                  <span className="material-symbols-outlined text-[18px]">school</span>
-                  Stanford University
-                </span>
               </div>
             </div>
           </div>
@@ -74,97 +100,142 @@ const Profile = () => {
           {/* Readiness Gauge */}
           <div className="md:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center text-center">
             <h4 className="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant mb-6">Career Readiness</h4>
-            <div className="relative w-32 h-32 flex items-center justify-center mb-4">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle className="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="10"></circle>
-                <circle cx="64" cy="64" fill="transparent" r="58" stroke="url(#gradient)" strokeDasharray="364.4" strokeDashoffset="43.7" strokeLinecap="round" strokeWidth="12"></circle>
-                <defs>
-                  <linearGradient id="gradient" x1="0%" x2="100%" y1="0%" y2="0%">
-                    <stop offset="0%" style={{ stopColor: '#4648d4' }}></stop>
-                    <stop offset="100%" style={{ stopColor: '#6b38d4' }}></stop>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <span className="absolute font-display-lg text-display-lg text-primary">88</span>
-            </div>
-            <p className="font-body-md text-body-md text-on-surface-variant">Top 5% for Junior DS roles</p>
-          </div>
-          
-          {/* Education & Certifications */}
-          <div className="md:col-span-6 bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="material-symbols-outlined text-primary">history_edu</span>
-              <h4 className="font-headline-md text-headline-md">Education</h4>
-            </div>
-            <div className="space-y-6">
-              <div className="flex gap-4">
-                <div className="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-on-surface-variant">school</span>
+            
+            {analysis ? (
+              <>
+                <div className="relative w-32 h-32 flex items-center justify-center mb-4">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle className="text-surface-container-high" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="10"></circle>
+                    <circle 
+                      cx="64" cy="64" fill="transparent" r="58" stroke="url(#gradient)" 
+                      strokeDasharray="364.4" 
+                      strokeDashoffset={364.4 - (364.4 * readinessScore) / 100} 
+                      strokeLinecap="round" strokeWidth="12"
+                      className="transition-all duration-1000 ease-out"
+                    ></circle>
+                    <defs>
+                      <linearGradient id="gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" style={{ stopColor: scoreColors[0] }}></stop>
+                        <stop offset="100%" style={{ stopColor: scoreColors[1] }}></stop>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span className="absolute font-display-lg text-display-lg" style={{ color: scoreColors[1] }}>{readinessScore}</span>
                 </div>
-                <div>
-                  <h5 className="font-label-md text-label-md text-on-surface">Bachelor of Computer Science</h5>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Stanford University • 2021 - 2025</p>
-                  <div className="mt-2 inline-block px-2 py-0.5 bg-secondary-container/10 text-secondary font-bold text-[10px] rounded uppercase tracking-tighter">GPA 3.9/4.0</div>
-                </div>
+                <p className="font-body-md text-body-md text-on-surface-variant">Role Alignment Score</p>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-32 w-full">
+                <button 
+                  onClick={handleRunAnalysis} 
+                  disabled={analyzing || !resume || !careerGoal}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary text-on-primary font-bold rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {analyzing ? (
+                    <span className="material-symbols-outlined animate-spin">refresh</span>
+                  ) : (
+                    <span className="material-symbols-outlined">analytics</span>
+                  )}
+                  {analyzing ? 'Analyzing...' : 'Run Analysis'}
+                </button>
+                {(!resume || !careerGoal) && (
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-4 text-center">
+                    Upload resume and set career goal first
+                  </p>
+                )}
               </div>
-            </div>
-            <div className="mt-10 mb-6 flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">verified</span>
-              <h4 className="font-headline-md text-headline-md">Certifications</h4>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 border border-outline-variant rounded-lg hover:border-primary transition-colors cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">cloud</span>
-                  <span className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-transform group-hover:translate-x-1">chevron_right</span>
-                </div>
-                <h5 className="font-label-md text-label-md text-on-surface">AWS Certified Practitioner</h5>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Cloud Foundations</p>
-              </div>
-              <div className="p-4 border border-outline-variant rounded-lg hover:border-primary transition-colors cursor-pointer group">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">database</span>
-                  <span className="material-symbols-outlined text-outline-variant group-hover:text-primary transition-transform group-hover:translate-x-1">chevron_right</span>
-                </div>
-                <h5 className="font-label-md text-label-md text-on-surface">Coursera SQL Mastery</h5>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">Advanced Queries</p>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Projects */}
-          <div className="md:col-span-6 bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="material-symbols-outlined text-primary">folder_special</span>
-              <h4 className="font-headline-md text-headline-md">Featured Projects</h4>
-            </div>
-            <div className="space-y-4">
-              <div className="group relative block rounded-xl border border-outline-variant overflow-hidden hover:shadow-lg transition-all duration-300">
-                <div className="h-40 w-full overflow-hidden">
-                  <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Project" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH_jrlzrFdLLCsRE7216k8IUv2ze6tusmkp3x7Rr_uuoQ70jlriK9xvEWZVT3f-RRPc79kel0UbABICjd3FRr4bgvpk858L2G_SmyeJIWmcmYtrvTBLIWC3fg47iBWYGJiPdJq0pitDQdHPt4mOkzRz8bhu2-i4HK6tyQoveJwORCGkyFG1llyT17E2jmNjKTX8bl52Wyq0sUyQE0c7EaPBhfSowBukK93pCriQFiC7Du-_ooSkL91" />
+          {/* AI Gap Analysis Section */}
+          {analysis && (
+            <div className="md:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-8 mt-4">
+              <div className="flex items-center gap-3 mb-8">
+                <span className="material-symbols-outlined text-primary text-[28px]">psychology</span>
+                <h4 className="font-headline-lg text-headline-lg">AI Gap Analysis</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h5 className="font-label-lg text-label-lg text-on-surface mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-green-600">check_circle</span>
+                    Matched Skills
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.extractedSkills && analysis.extractedSkills.length > 0 ? (
+                      analysis.extractedSkills.map((skill, idx) => (
+                        <span key={idx} className="px-3 py-1.5 bg-green-100 text-green-800 font-label-md rounded-lg border border-green-200">
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-on-surface-variant text-body-md">No technical skills detected.</p>
+                    )}
+                  </div>
                 </div>
-                <div className="p-4 bg-surface-container-lowest">
-                  <h5 className="font-label-md text-label-md text-on-surface">NLP-Based Career Assistant</h5>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Python, TensorFlow, OpenAI API</p>
+
+                <div>
+                  <h5 className="font-label-lg text-label-lg text-on-surface mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-red-500">warning</span>
+                    Missing Skills
+                  </h5>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.missingSkills && analysis.missingSkills.length > 0 ? (
+                      analysis.missingSkills.map((skill, idx) => (
+                        <span key={idx} className="px-3 py-1.5 bg-red-50 text-red-700 font-label-md rounded-lg border border-red-200">
+                          {skill}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-on-surface-variant text-body-md">All required skills matched!</p>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="group relative flex items-center gap-4 p-4 rounded-xl border border-outline-variant hover:bg-surface transition-colors">
-                <div className="w-16 h-16 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-primary">web</span>
-                </div>
-                <div className="flex-grow">
-                  <h5 className="font-label-md text-label-md text-on-surface">Data Portfolio v2.0</h5>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant">Interactive D3.js Visualizations</p>
-                </div>
-                <button className="p-2 text-on-surface-variant hover:text-primary">
-                  <span className="material-symbols-outlined">open_in_new</span>
-                </button>
+
+              <div className="mt-8 pt-8 border-t border-outline-variant">
+                <h5 className="font-label-lg text-label-lg text-on-surface mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary">lightbulb</span>
+                  Recommendations
+                </h5>
+                <ul className="space-y-3">
+                  {(analysis.recommendations || []).map((rec, idx) => (
+                    <li key={idx} className="flex gap-3 text-on-surface-variant text-body-md">
+                      <span className="material-symbols-outlined text-primary text-[20px] shrink-0">arrow_right</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
+          )}
+
+          {/* Career Goal */}
+          <div className="md:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 mt-4">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-primary text-[32px]">target</span>
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-headline-md text-headline-md">Career Goal</h4>
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-bold text-on-surface">Preferred Role:</span> {careerGoal ? careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Not Set'}
+                  </p>
+                  <p className="font-body-md text-body-md text-on-surface-variant">
+                    <span className="font-bold text-on-surface">Preferred Company:</span> {careerGoal?.preferredCompany || 'Any'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button onClick={() => navigate('/goal')} className="flex items-center gap-2 px-6 py-2 border border-outline text-on-surface font-bold text-label-md rounded-lg hover:bg-surface-container transition-colors">
+              <span className="material-symbols-outlined text-[18px]">edit</span>
+              Edit
+            </button>
           </div>
           
           {/* Resume History */}
-          <div className="md:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+          <div className="md:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden mt-4">
             <div className="p-stack-lg border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">history</span>
@@ -200,7 +271,7 @@ const Profile = () => {
                       </td>
                       <td className="px-8 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => window.open(resume.fileUrl, '_blank')} className="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant">
+                          <button onClick={() => window.open(resume.fileUrl, '_blank')} className="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant" title="Download">
                             <span className="material-symbols-outlined text-[20px]">download</span>
                           </button>
                         </div>
@@ -217,32 +288,7 @@ const Profile = () => {
               </table>
             </div>
           </div>
-          
-          <div className="md:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-primary text-[32px]">target</span>
-              </div>
-              <div className="space-y-1">
-                <h4 className="font-headline-md text-headline-md">Career Goal</h4>
-                <div className="flex flex-wrap gap-x-6 gap-y-2">
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    <span className="font-bold text-on-surface">Preferred Role:</span> {careerGoal ? careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Not Set'}
-                  </p>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    <span className="font-bold text-on-surface">Preferred Company:</span> {careerGoal?.preferredCompany || 'Any'}
-                  </p>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    <span className="font-bold text-on-surface">Graduation:</span> {careerGoal?.graduationYear || 'Not Set'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <button onClick={() => navigate('/goal')} className="flex items-center gap-2 px-6 py-2 border border-outline text-on-surface font-bold text-label-md rounded-lg hover:bg-surface-container transition-colors">
-              <span className="material-symbols-outlined text-[18px]">edit</span>
-              Edit
-            </button>
-          </div>
+
         </div>
       </div>
     </>

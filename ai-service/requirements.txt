@@ -14,21 +14,11 @@ pydantic-settings==2.3.4
 # Environment Variables
 python-dotenv==1.0.1
 
-# NLP – spaCy
-spacy==3.7.4
-
-# NLP – Sentence Transformers (semantic embeddings)
-sentence-transformers==3.0.1
-
-# NLP – HuggingFace Transformers
-transformers==4.41.2
-
 # Scientific Computing
 numpy==1.26.4
-scikit-learn==1.5.0
 
 # PDF Parsing
-pdfplumber==0.11.1
+PyMuPDF==1.24.5
 
 # DOCX Parsing
 python-docx==1.1.2
