@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import careerGoalService from '../services/careerGoalService';
+import resumeService from '../services/resumeService';
 
 const Profile = () => {
   const { user } = useAuth();
@@ -10,6 +11,7 @@ const Profile = () => {
   const userName = user?.fullName || 'Complete your profile';
   const userEmail = user?.email || 'No email provided';
   const [careerGoal, setCareerGoal] = useState(null);
+  const [resume, setResume] = useState(null);
 
   useEffect(() => {
     const fetchGoal = async () => {
@@ -20,7 +22,18 @@ const Profile = () => {
         console.error("Error fetching career goal on profile", err);
       }
     };
+    
+    const fetchResume = async () => {
+      try {
+        const existingResume = await resumeService.getResume();
+        setResume(existingResume);
+      } catch (err) {
+        console.error("Error fetching resume on profile", err);
+      }
+    };
+    
     fetchGoal();
+    fetchResume();
   }, []);
 
   return (
@@ -155,9 +168,9 @@ const Profile = () => {
             <div className="p-stack-lg border-b border-outline-variant flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">history</span>
-                <h4 className="font-headline-md text-headline-md">Resume Upload History</h4>
+                <h4 className="font-headline-md text-headline-md">Resume Status</h4>
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 border border-primary text-primary font-bold text-label-md rounded-lg hover:bg-primary/5 transition-colors">
+              <button onClick={() => navigate('/upload')} className="flex items-center gap-2 px-4 py-2 border border-primary text-primary font-bold text-label-md rounded-lg hover:bg-primary/5 transition-colors">
                 <span className="material-symbols-outlined text-[18px]">add</span>
                 Upload New Version
               </button>
@@ -168,33 +181,38 @@ const Profile = () => {
                   <tr>
                     <th className="px-8 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Date</th>
                     <th className="px-8 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">File Name</th>
-                    <th className="px-8 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">AI Match Score</th>
+                    <th className="px-8 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">Status</th>
                     <th className="px-8 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
-                  <tr className="hover:bg-surface transition-colors">
-                    <td className="px-8 py-4 font-body-sm text-body-sm">Oct 12, 2024</td>
-                    <td className="px-8 py-4 flex items-center gap-3">
-                      <span className="material-symbols-outlined text-error">picture_as_pdf</span>
-                      <span className="font-label-md text-label-md">AlexRivera_DS_v3.pdf</span>
-                    </td>
-                    <td className="px-8 py-4 text-center">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 font-bold text-[12px] rounded-full">
-                        88/100
-                      </span>
-                    </td>
-                    <td className="px-8 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant">
-                          <span className="material-symbols-outlined text-[20px]">visibility</span>
-                        </button>
-                        <button className="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant">
-                          <span className="material-symbols-outlined text-[20px]">download</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  {resume ? (
+                    <tr className="hover:bg-surface transition-colors">
+                      <td className="px-8 py-4 font-body-sm text-body-sm">{new Date(resume.uploadedAt).toLocaleDateString()}</td>
+                      <td className="px-8 py-4 flex items-center gap-3">
+                        <span className="material-symbols-outlined text-error">picture_as_pdf</span>
+                        <span className="font-label-md text-label-md">{resume.fileName}</span>
+                      </td>
+                      <td className="px-8 py-4 text-center">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 font-bold text-[12px] rounded-full">
+                          Uploaded
+                        </span>
+                      </td>
+                      <td className="px-8 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => window.open(resume.fileUrl, '_blank')} className="p-2 hover:bg-surface-container-high rounded-full transition-colors text-on-surface-variant">
+                            <span className="material-symbols-outlined text-[20px]">download</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="px-8 py-8 text-center text-on-surface-variant font-body-md">
+                        No resume uploaded yet.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

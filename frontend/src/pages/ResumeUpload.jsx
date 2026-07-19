@@ -1,17 +1,36 @@
 import TopAppBar from '../components/layout/TopAppBar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import careerGoalService from '../services/careerGoalService';
+import resumeService from '../services/resumeService';
 
 const ResumeUpload = () => {
   const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
+  const [careerGoal, setCareerGoal] = useState(null);
+  const [existingResume, setExistingResume] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const goal = await careerGoalService.getGoal();
+        setCareerGoal(goal);
+        
+        const resume = await resumeService.getResume();
+        setExistingResume(resume);
+      } catch (err) {
+        console.error("Failed to fetch data", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleFileChange = (e) => {
     if (e.target.files.length > 0) {
-      setFile(e.target.files[0]);
-      simulateUpload();
+      handleUpload(e.target.files[0]);
     }
   };
 
@@ -22,23 +41,41 @@ const ResumeUpload = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     if (e.dataTransfer.files.length > 0) {
-      setFile(e.dataTransfer.files[0]);
-      simulateUpload();
+      handleUpload(e.dataTransfer.files[0]);
     }
   };
 
-  const simulateUpload = () => {
+  const handleUpload = async (selectedFile) => {
+    setError(null);
     setProgress(0);
+    
+    if (selectedFile.type !== 'application/pdf') {
+      setError("Only PDF files are allowed.");
+      return;
+    }
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setError("File exceeds maximum size of 5MB.");
+      return;
+    }
+
+    setFile(selectedFile);
+    
+    // Simulate progress while uploading (since standard axios upload progress is complex to mock easily without config here)
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + Math.floor(Math.random() * 20);
-        if (next >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return next;
-      });
+      setProgress((prev) => (prev < 90 ? prev + 10 : prev));
     }, 200);
+
+    try {
+      const response = await resumeService.uploadResume(selectedFile);
+      clearInterval(interval);
+      setProgress(100);
+      setExistingResume(response);
+    } catch (err) {
+      clearInterval(interval);
+      setProgress(0);
+      setFile(null);
+      setError(err.response?.data || "Upload failed. Check if Supabase storage is configured.");
+    }
   };
 
   const handleAnalyze = () => {
@@ -59,7 +96,10 @@ const ResumeUpload = () => {
             <span className="material-symbols-outlined text-primary">target</span>
             <div>
               <p className="text-label-sm text-outline uppercase tracking-wider">Current Career Goal</p>
-              <p className="font-bold text-on-surface">Target Role: <span className="text-primary">Data Scientist</span> | Preferred Company: <span className="text-primary">Google</span></p>
+              <p className="font-bold text-on-surface">
+                Target Role: <span className="text-primary">{careerGoal ? careerGoal.targetRole.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'Not Set'}</span> | 
+                Preferred Company: <span className="text-primary">{careerGoal?.preferredCompany || 'Any'}</span>
+              </p>
             </div>
           </div>
           <button onClick={() => navigate('/goal')} className="text-primary font-label-md hover:underline flex items-center gap-1">
@@ -68,6 +108,13 @@ const ResumeUpload = () => {
           </button>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="bg-error-container/50 border border-error/20 text-error text-sm p-3 rounded-xl mb-4">
+            {error}
+          </div>
+        )}
+
         {/* Drag & Drop Zone */}
         <div 
           className="relative group cursor-pointer border-2 border-dashed border-outline-variant bg-surface-container-lowest rounded-[2rem] p-12 transition-all duration-300 hover:border-primary hover:shadow-xl hover:shadow-primary/5 flex flex-col items-center text-center"
@@ -75,7 +122,7 @@ const ResumeUpload = () => {
           onDrop={handleDrop}
         >
           <input 
-            accept=".pdf,.docx" 
+            accept=".pdf" 
             className="absolute inset-0 opacity-0 cursor-pointer z-10" 
             type="file"
             onChange={handleFileChange}
@@ -118,9 +165,29 @@ const ResumeUpload = () => {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-            <div className="flex items-center gap-2 text-primary animate-pulse-subtle">
-              <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-              <span className="text-[12px] font-bold uppercase tracking-wider">AI is preparing your analysis...</span>
+            {progress === 100 && (
+              <div className="flex items-center gap-2 text-primary">
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                <span className="text-[12px] font-bold uppercase tracking-wider">Uploaded successfully. AI processing not started (Milestone 5).</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Existing Resume Info */}
+        {!file && existingResume && (
+          <div className="bg-surface-container-low rounded-2xl p-6 border border-primary/20 shadow-sm space-y-4">
+            <h4 className="font-headline-md text-primary">Currently Uploaded Resume</h4>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-primary">picture_as_pdf</span>
+              </div>
+              <div>
+                <p className="font-label-md text-label-md text-on-surface">{existingResume.fileName}</p>
+                <p className="text-[12px] text-on-surface-variant">
+                  {(existingResume.fileSize / (1024 * 1024)).toFixed(2)} MB • Uploaded: {new Date(existingResume.uploadedAt).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           </div>
         )}

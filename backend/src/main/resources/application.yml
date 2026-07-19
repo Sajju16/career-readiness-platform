@@ -54,6 +54,11 @@ ai:
   service:
     base-url: ${AI_SERVICE_URL:http://localhost:8000}
 
+# ----- Supabase API -----
+supabase:
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_PUBLISHABLE_KEY}
+
 # ----- Springdoc / Swagger -----
 springdoc:
   api-docs:
