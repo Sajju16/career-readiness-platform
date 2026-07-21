@@ -24,25 +24,35 @@ public class AnalysisService {
     @Transactional
     public AnalysisResponse analyzeUserResume(User user) {
         CareerGoal careerGoal = careerGoalRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Career Goal not set. Please set a career goal first."));
+                .orElseThrow(() -> new RuntimeException(
+                        "Career Goal not set. Please set a career goal first."));
 
         Resume resume = resumeRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Resume not uploaded. Please upload a resume first."));
+                .orElseThrow(() -> new RuntimeException(
+                        "Resume not uploaded. Please upload a resume first."));
 
-        // Generate signed URL
+        // Generate signed URL for private Supabase Storage access
         String signedUrl = storageService.generateSignedUrl(resume.getFileUrl());
 
-        // Call AI Service
-        AnalysisResponse aiResponse = aiServiceClient.analyzeResume(signedUrl, careerGoal.getTargetRole());
+        // Call AI Service — forward targetRole AND preferredCompany (M6)
+        AnalysisResponse aiResponse = aiServiceClient.analyzeResume(
+                signedUrl,
+                careerGoal.getTargetRole(),
+                careerGoal.getPreferredCompany()   // may be null → FastAPI handles gracefully
+        );
 
-        // Save Analysis to DB
-        ResumeAnalysis analysis = analysisRepository.findByUserId(user.getId()).orElse(new ResumeAnalysis());
+        // Persist analysis results (upsert pattern — one record per user)
+        ResumeAnalysis analysis = analysisRepository.findByUserId(user.getId())
+                .orElse(new ResumeAnalysis());
+
         analysis.setUser(user);
         analysis.setReadinessScore(aiResponse.getReadinessScore());
         analysis.setExtractedSkills(aiResponse.getExtractedSkills());
+        analysis.setMatchedSkills(aiResponse.getMatchedSkills());       // M6
         analysis.setMissingSkills(aiResponse.getMissingSkills());
+        analysis.setRequirementSource(aiResponse.getRequirementSource()); // M6
         analysis.setRecommendations(aiResponse.getRecommendations());
-        
+
         analysisRepository.save(analysis);
 
         return aiResponse;
@@ -51,12 +61,15 @@ public class AnalysisService {
     @Transactional(readOnly = true)
     public AnalysisResponse getAnalysis(User user) {
         ResumeAnalysis analysis = analysisRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Analysis not found. Please run the analysis first."));
-                
+                .orElseThrow(() -> new RuntimeException(
+                        "Analysis not found. Please run the analysis first."));
+
         return AnalysisResponse.builder()
                 .readinessScore(analysis.getReadinessScore())
                 .extractedSkills(analysis.getExtractedSkills())
+                .matchedSkills(analysis.getMatchedSkills())             // M6
                 .missingSkills(analysis.getMissingSkills())
+                .requirementSource(analysis.getRequirementSource())     // M6
                 .recommendations(analysis.getRecommendations())
                 .build();
     }

@@ -13,15 +13,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AnalysisResponse {
-    // Accept both snake_case (from FastAPI) and camelCase; serialize as camelCase to React
+    // @JsonAlias accepts snake_case from FastAPI; serializes as camelCase to React
+
     @JsonAlias("readiness_score")
     private Integer readinessScore;
 
     @JsonAlias("extracted_skills")
     private List<String> extractedSkills;
 
+    @JsonAlias("matched_skills")
+    private List<String> matchedSkills;         // M6: skills from resume that match required
+
     @JsonAlias("missing_skills")
     private List<String> missingSkills;
+
+    @JsonAlias("requirement_source")
+    private String requirementSource;           // M6: e.g. "Google – Software Engineer"
 
     private List<String> recommendations;
 }

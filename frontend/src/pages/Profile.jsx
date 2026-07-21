@@ -56,8 +56,10 @@ const Profile = () => {
 
   const readinessScore = analysis?.readinessScore ?? 0;
   const extractedSkills = analysis?.extractedSkills ?? [];
+  const matchedSkills = analysis?.matchedSkills ?? [];
   const missingSkills = analysis?.missingSkills ?? [];
   const recommendations = analysis?.recommendations ?? [];
+  const requirementSource = analysis?.requirementSource ?? null;
   const scoreColors = analysis ? getScoreColor(readinessScore) : ['#e5e7eb', '#d1d5db'];
 
   return (
@@ -123,6 +125,23 @@ const Profile = () => {
                   <span className="absolute font-display-lg text-display-lg" style={{ color: scoreColors[1] }}>{readinessScore}</span>
                 </div>
                 <p className="font-body-md text-body-md text-on-surface-variant">Role Alignment Score</p>
+                {requirementSource && (
+                  <p className="font-body-sm text-body-sm text-on-surface-variant/70 mt-2 px-2">
+                    <span className="font-semibold">vs.</span> {requirementSource}
+                  </p>
+                )}
+                <button
+                  onClick={handleRunAnalysis}
+                  disabled={analyzing}
+                  className="mt-4 flex items-center gap-1 px-4 py-1.5 border border-outline text-on-surface-variant font-label-sm rounded-lg hover:bg-surface-container transition-colors disabled:opacity-50"
+                >
+                  {analyzing ? (
+                    <span className="material-symbols-outlined animate-spin text-[16px]">refresh</span>
+                  ) : (
+                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                  )}
+                  {analyzing ? 'Analyzing...' : 'Re-run'}
+                </button>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-32 w-full">
@@ -162,14 +181,14 @@ const Profile = () => {
                     Matched Skills
                   </h5>
                   <div className="flex flex-wrap gap-2">
-                    {analysis.extractedSkills && analysis.extractedSkills.length > 0 ? (
-                      analysis.extractedSkills.map((skill, idx) => (
+                    {matchedSkills.length > 0 ? (
+                      matchedSkills.map((skill, idx) => (
                         <span key={idx} className="px-3 py-1.5 bg-green-100 text-green-800 font-label-md rounded-lg border border-green-200">
                           {skill}
                         </span>
                       ))
                     ) : (
-                      <p className="text-on-surface-variant text-body-md">No technical skills detected.</p>
+                      <p className="text-on-surface-variant text-body-md">No required skills matched yet.</p>
                     )}
                   </div>
                 </div>
