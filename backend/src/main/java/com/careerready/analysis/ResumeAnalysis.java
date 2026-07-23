@@ -53,6 +53,10 @@ public class ResumeAnalysis {
     @Column(name = "recommendations", columnDefinition = "jsonb")
     private List<String> recommendations;
 
+    @Type(JsonType.class)
+    @Column(name = "roadmap", columnDefinition = "jsonb")
+    private Object roadmap;                                 // M7: stored as raw JSON map
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private ZonedDateTime createdAt;
