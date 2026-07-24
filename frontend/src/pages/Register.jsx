@@ -22,8 +22,8 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     
@@ -33,8 +33,15 @@ const Register = () => {
       await register(fullName, email, password);
       navigate('/dashboard');
     } catch (err) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
+      if (err.response?.data) {
+        if (err.response.data.error) {
+          setError(err.response.data.error);
+        } else if (typeof err.response.data === 'object') {
+          const firstError = Object.values(err.response.data)[0];
+          setError(typeof firstError === 'string' ? firstError : 'Registration failed. Please try again later.');
+        } else {
+          setError('Registration failed. Please try again later.');
+        }
       } else {
         setError('Registration failed. Please try again later.');
       }
@@ -122,7 +129,7 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 text-xs">Must be at least 6 characters</p>
+              <p className="font-body-sm text-body-sm text-on-surface-variant mt-2 text-xs">Must be at least 8 characters</p>
             </div>
             
             <div className="pt-2">

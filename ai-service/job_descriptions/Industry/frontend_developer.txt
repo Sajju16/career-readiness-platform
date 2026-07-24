@@ -1,0 +1,16 @@
+Job Description: Frontend Developer at Industry
+
+We are looking for an experienced professional to join our team. The ideal candidate will have strong expertise in the following areas:
+
+- Proven experience with React in a production environment.
+- Proven experience with JavaScript in a production environment.
+- Proven experience with TypeScript in a production environment.
+- Proven experience with HTML in a production environment.
+- Proven experience with CSS in a production environment.
+- Proven experience with REST API in a production environment.
+- Proven experience with Git in a production environment.
+- Proven experience with Redux in a production environment.
+- Proven experience with Responsive Design in a production environment.
+- Proven experience with Testing in a production environment.
+
+Additional responsibilities include collaborating with cross-functional teams and participating in design reviews.

@@ -1,0 +1,16 @@
+Job Description: Cybersecurity Analyst at Industry
+
+We are looking for an experienced professional to join our team. The ideal candidate will have strong expertise in the following areas:
+
+- Proven experience with Network Security in a production environment.
+- Proven experience with SIEM in a production environment.
+- Proven experience with Penetration Testing in a production environment.
+- Proven experience with Vulnerability Assessment in a production environment.
+- Proven experience with Incident Response in a production environment.
+- Proven experience with Linux in a production environment.
+- Proven experience with Python in a production environment.
+- Proven experience with Firewalls in a production environment.
+- Proven experience with IDS/IPS in a production environment.
+- Proven experience with Security Frameworks in a production environment.
+
+Additional responsibilities include collaborating with cross-functional teams and participating in design reviews.

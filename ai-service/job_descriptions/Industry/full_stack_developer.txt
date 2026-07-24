@@ -1,0 +1,16 @@
+Job Description: Full Stack Developer at Industry
+
+We are looking for an experienced professional to join our team. The ideal candidate will have strong expertise in the following areas:
+
+- Proven experience with React in a production environment.
+- Proven experience with JavaScript in a production environment.
+- Proven experience with Node.js in a production environment.
+- Proven experience with Java in a production environment.
+- Proven experience with Spring Boot in a production environment.
+- Proven experience with SQL in a production environment.
+- Proven experience with Docker in a production environment.
+- Proven experience with Git in a production environment.
+- Proven experience with REST API in a production environment.
+- Proven experience with TypeScript in a production environment.
+
+Additional responsibilities include collaborating with cross-functional teams and participating in design reviews.

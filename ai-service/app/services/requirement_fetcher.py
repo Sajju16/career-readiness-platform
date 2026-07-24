@@ -1,225 +1,80 @@
 """
 requirement_fetcher.py
-Milestone 6: Live Industry / Company Requirement Analysis
+Milestone 8: NLP-Based Job Description Extraction
 
 Resolves the required skill profile for a given target role,
-optionally adjusted for a specific company context.
+by reading a Job Description .txt file and extracting skills via NLP.
 
 Logic:
-  - If company is provided and found → return company-specific profile
-  - If company is provided but not found → fall back to industry profile, note it
-  - If no company → return general industry profile
+  - If company is provided and found → load company-specific JD
+  - If company JD is missing → fall back to industry JD
+  - Extract required skills from the loaded JD text using existing NLP pipeline
 """
 
+import os
+import logging
 from typing import Optional
+from app.services.skill_extractor import extract_skills
 
-# ---------------------------------------------------------------------------
-# Industry-level required skills per role
-# These represent broad market expectations across companies.
-# ---------------------------------------------------------------------------
-INDUSTRY_REQUIREMENTS: dict[str, list[str]] = {
-    "software_engineer": [
-        "Data Structures", "Algorithms", "Java", "Python", "SQL",
-        "Git", "REST API", "System Design", "Object-Oriented Programming",
-        "Unit Testing"
-    ],
-    "data_scientist": [
-        "Python", "SQL", "Machine Learning", "Data Analysis", "Pandas",
-        "NumPy", "Scikit-Learn", "Statistics", "Data Visualization", "Git"
-    ],
-    "ai_engineer": [
-        "Python", "Machine Learning", "Deep Learning", "TensorFlow", "PyTorch",
-        "NLP", "Data Structures", "SQL", "Git", "Model Deployment"
-    ],
-    "product_manager": [
-        "Product Roadmap", "User Research", "Data Analysis", "Agile",
-        "Stakeholder Management", "SQL", "A/B Testing", "Wireframing",
-        "Communication", "Market Research"
-    ],
-    "ux_designer": [
-        "Figma", "User Research", "Wireframing", "Prototyping",
-        "Usability Testing", "Information Architecture", "Interaction Design",
-        "CSS", "HTML", "Design Systems"
-    ],
-    "cybersecurity_analyst": [
-        "Network Security", "SIEM", "Penetration Testing", "Vulnerability Assessment",
-        "Incident Response", "Linux", "Python", "Firewalls", "IDS/IPS",
-        "Security Frameworks"
-    ],
-    "frontend_developer": [
-        "React", "JavaScript", "TypeScript", "HTML", "CSS",
-        "REST API", "Git", "Redux", "Responsive Design", "Testing"
-    ],
-    "backend_developer": [
-        "Java", "Spring Boot", "SQL", "PostgreSQL", "REST API",
-        "Microservices", "Docker", "Git", "Authentication", "System Design"
-    ],
-    "full_stack_developer": [
-        "React", "JavaScript", "Node.js", "Java", "Spring Boot",
-        "SQL", "Docker", "Git", "REST API", "TypeScript"
-    ],
-}
-
-# ---------------------------------------------------------------------------
-# Company-specific required skills per role
-# These reflect known hiring patterns and tech stacks for each company.
-# Falls back to INDUSTRY_REQUIREMENTS if the role is not listed under a company.
-# ---------------------------------------------------------------------------
-COMPANY_REQUIREMENTS: dict[str, dict[str, list[str]]] = {
-    "google": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "System Design", "Python",
-            "Java", "C++", "Go", "Distributed Systems", "Object-Oriented Programming",
-            "Unit Testing"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Statistics",
-            "TensorFlow", "Data Analysis", "BigQuery", "Pandas", "A/B Testing", "Git"
-        ],
-        "ai_engineer": [
-            "Python", "TensorFlow", "Deep Learning", "NLP", "Machine Learning",
-            "Distributed Systems", "Data Structures", "Algorithms", "Research Skills", "Git"
-        ],
-        "product_manager": [
-            "Product Roadmap", "Data Analysis", "SQL", "A/B Testing",
-            "User Research", "Agile", "Communication", "Market Research",
-            "OKR Framework", "Stakeholder Management"
-        ],
-    },
-    "microsoft": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "System Design", "C#", ".NET",
-            "Azure", "Python", "Java", "REST API", "Git"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Azure ML", "Pandas",
-            "Statistics", "Power BI", "Data Analysis", "Scikit-Learn", "Git"
-        ],
-        "ai_engineer": [
-            "Python", "Azure", "Machine Learning", "Deep Learning", "NLP",
-            "TensorFlow", "PyTorch", "Data Structures", "Model Deployment", "Git"
-        ],
-    },
-    "amazon": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "System Design", "Java", "Python",
-            "AWS", "Microservices", "REST API", "Distributed Systems", "Leadership Principles"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Statistics", "AWS",
-            "Pandas", "Scikit-Learn", "A/B Testing", "Data Analysis", "Git"
-        ],
-        "backend_developer": [
-            "Java", "Spring Boot", "AWS", "Microservices", "SQL",
-            "REST API", "Docker", "Kubernetes", "Git", "System Design"
-        ],
-    },
-    "meta": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "System Design", "Python",
-            "C++", "Java", "Distributed Systems", "React", "GraphQL", "Git"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Statistics", "Pandas",
-            "A/B Testing", "Causal Inference", "Data Analysis", "Hive", "Git"
-        ],
-        "frontend_developer": [
-            "React", "JavaScript", "TypeScript", "GraphQL", "CSS",
-            "HTML", "REST API", "Git", "Redux", "Performance Optimization"
-        ],
-    },
-    "apple": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "Swift", "Objective-C",
-            "System Design", "C++", "Python", "Xcode", "Unit Testing", "Git"
-        ],
-        "ai_engineer": [
-            "Python", "Machine Learning", "Core ML", "TensorFlow", "NLP",
-            "Data Structures", "Algorithms", "Swift", "Model Optimization", "Git"
-        ],
-    },
-    "netflix": {
-        "software_engineer": [
-            "Data Structures", "Algorithms", "System Design", "Java",
-            "Python", "Microservices", "AWS", "Distributed Systems", "REST API", "Git"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Statistics",
-            "A/B Testing", "Causal Inference", "Pandas", "Spark", "Data Analysis", "Git"
-        ],
-    },
-    "infosys": {
-        "software_engineer": [
-            "Java", "Spring Boot", "SQL", "REST API", "Git",
-            "Object-Oriented Programming", "Data Structures", "Algorithms",
-            "Agile", "Testing"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Pandas",
-            "Data Analysis", "Scikit-Learn", "Statistics", "Git", "Power BI", "Agile"
-        ],
-    },
-    "tcs": {
-        "software_engineer": [
-            "Java", "Python", "SQL", "REST API", "Git",
-            "Data Structures", "Algorithms", "Object-Oriented Programming",
-            "Agile", "Unit Testing"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Pandas",
-            "Data Analysis", "TensorFlow", "Statistics", "Agile", "Git", "Power BI"
-        ],
-    },
-    "wipro": {
-        "software_engineer": [
-            "Java", "Python", "SQL", "REST API", "Git",
-            "Data Structures", "Algorithms", "Agile", "Unit Testing", "Cloud Basics"
-        ],
-        "data_scientist": [
-            "Python", "SQL", "Machine Learning", "Pandas",
-            "Scikit-Learn", "Data Analysis", "Git", "Statistics", "Agile", "Visualization"
-        ],
-    },
-}
-
+# The directory where Job Description text files are stored
+JD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "job_descriptions")
 
 def get_requirements(target_role: str, company: Optional[str]) -> tuple[list[str], str]:
     """
-    Returns the required skills list and a human-readable source label.
+    Returns the required skills list extracted from a JD file, and a source label.
 
     Args:
-        target_role: The role key (e.g. "software_engineer"). Always required.
+        target_role: The role key (e.g. "software_engineer" or "Software Engineer").
         company: Optional company name (e.g. "Google"). Case-insensitive.
 
     Returns:
         (required_skills, source_label)
     """
-    role_key = (target_role or "software_engineer").lower().strip().replace(" ", "_")
+    role_file_name = (target_role or "software_engineer").lower().strip().replace(" ", "_") + ".txt"
     role_display = (target_role or "software_engineer").replace("_", " ").title()
 
+    file_path_to_read = None
+    source_label = ""
+    
     if company:
-        company_key = company.lower().strip()
-        company_display = company.strip().title()
-
-        company_profile = COMPANY_REQUIREMENTS.get(company_key, {})
-        role_skills = company_profile.get(role_key)
-
-        if role_skills:
-            source = f"{company_display} – {role_display}"
-            return role_skills, source
+        company_folder = company.strip().title()
+        company_jd_path = os.path.join(JD_DIR, company_folder, role_file_name)
+        
+        if os.path.exists(company_jd_path):
+            file_path_to_read = company_jd_path
+            source_label = f"{company_folder} – {role_display}"
         else:
-            # Company known or unknown but role not in company profile — fall back to industry
-            industry_skills = INDUSTRY_REQUIREMENTS.get(
-                role_key,
-                INDUSTRY_REQUIREMENTS["software_engineer"]
-            )
-            source = f"Industry – {role_display} (no specific profile for {company_display})"
-            return industry_skills, source
+            # Fallback to Industry
+            industry_jd_path = os.path.join(JD_DIR, "Industry", role_file_name)
+            if os.path.exists(industry_jd_path):
+                file_path_to_read = industry_jd_path
+                source_label = f"Industry – {role_display} (no specific profile for {company_folder})"
     else:
-        # No company — use general industry requirements
-        industry_skills = INDUSTRY_REQUIREMENTS.get(
-            role_key,
-            INDUSTRY_REQUIREMENTS["software_engineer"]
-        )
-        source = f"Industry – {role_display}"
-        return industry_skills, source
+        # No company provided, use Industry
+        industry_jd_path = os.path.join(JD_DIR, "Industry", role_file_name)
+        if os.path.exists(industry_jd_path):
+            file_path_to_read = industry_jd_path
+            source_label = f"Industry – {role_display}"
+
+    # If even the Industry fallback is missing, fallback to a default Software Engineer profile
+    if not file_path_to_read or not os.path.exists(file_path_to_read):
+        logging.warning(f"JD file not found for role '{target_role}' and company '{company}'. Falling back to Industry Software Engineer.")
+        file_path_to_read = os.path.join(JD_DIR, "Industry", "software_engineer.txt")
+        source_label = f"Industry – Software Engineer (Fallback)"
+
+    # Read the JD file and extract skills
+    required_skills = []
+    if os.path.exists(file_path_to_read):
+        with open(file_path_to_read, "r", encoding="utf-8") as f:
+            jd_text = f.read()
+        
+        # NLP Extraction: Use the exact same pipeline used for resumes
+        required_skills = extract_skills(jd_text)
+        
+        # Deduplicate while preserving order
+        seen = set()
+        required_skills = [x for x in required_skills if not (x.lower() in seen or seen.add(x.lower()))]
+    else:
+        logging.error(f"Critical error: Fallback JD file not found at {file_path_to_read}")
+
+    return required_skills, source_label

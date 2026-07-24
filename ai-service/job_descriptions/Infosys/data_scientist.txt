@@ -1,0 +1,16 @@
+Job Description: Data Scientist at Infosys
+
+We are looking for an experienced professional to join our team. The ideal candidate will have strong expertise in the following areas:
+
+- Proven experience with Python in a production environment.
+- Proven experience with SQL in a production environment.
+- Proven experience with Machine Learning in a production environment.
+- Proven experience with Pandas in a production environment.
+- Proven experience with Data Analysis in a production environment.
+- Proven experience with Scikit-Learn in a production environment.
+- Proven experience with Statistics in a production environment.
+- Proven experience with Git in a production environment.
+- Proven experience with Power BI in a production environment.
+- Proven experience with Agile in a production environment.
+
+Additional responsibilities include collaborating with cross-functional teams and participating in design reviews.

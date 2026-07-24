@@ -1,0 +1,16 @@
+Job Description: Ai Engineer at Google
+
+We are looking for an experienced professional to join our team. The ideal candidate will have strong expertise in the following areas:
+
+- Proven experience with Python in a production environment.
+- Proven experience with TensorFlow in a production environment.
+- Proven experience with Deep Learning in a production environment.
+- Proven experience with NLP in a production environment.
+- Proven experience with Machine Learning in a production environment.
+- Proven experience with Distributed Systems in a production environment.
+- Proven experience with Data Structures in a production environment.
+- Proven experience with Algorithms in a production environment.
+- Proven experience with Research Skills in a production environment.
+- Proven experience with Git in a production environment.
+
+Additional responsibilities include collaborating with cross-functional teams and participating in design reviews.
