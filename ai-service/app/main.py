@@ -8,6 +8,7 @@ NLP logic, routers, and endpoints will be added in Milestones 3–5.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 app = FastAPI(
     title="Career Readiness AI Service",
@@ -20,7 +21,7 @@ app = FastAPI(
 # ---- CORS ----
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080"],   # Spring Boot backend only
+    allow_origins=[os.getenv("ALLOWED_ORIGIN", "http://localhost:8080")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
