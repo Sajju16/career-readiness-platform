@@ -39,8 +39,8 @@ public class AIServiceClient {
         try {
             return restTemplate.postForObject(url, request, AnalysisResponse.class);
         } catch (org.springframework.web.client.RestClientResponseException e) {
-            log.warn("Downstream API Error | URL: {} | Status: {} | Exception: {} | Body: {}", 
-                     url, e.getStatusCode().value(), e.getClass().getSimpleName(), e.getResponseBodyAsString());
+            log.warn("Downstream API Error | URL: {} | Status: {} | Exception: {} | Headers: {} | Body: {}", 
+                     url, e.getStatusCode().value(), e.getClass().getSimpleName(), e.getResponseHeaders(), e.getResponseBodyAsString());
             
             if (e.getStatusCode().value() == 429) {
                 try {
