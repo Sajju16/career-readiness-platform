@@ -7,10 +7,13 @@ import com.careerready.analysis.dto.RoadmapResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AIServiceClient {
@@ -33,7 +36,23 @@ public class AIServiceClient {
                 .company(company)
                 .build();
 
-        return restTemplate.postForObject(url, request, AnalysisResponse.class);
+        try {
+            return restTemplate.postForObject(url, request, AnalysisResponse.class);
+        } catch (org.springframework.web.client.RestClientResponseException e) {
+            log.warn("Downstream API Error | URL: {} | Status: {} | Exception: {} | Body: {}", 
+                     url, e.getStatusCode().value(), e.getClass().getSimpleName(), e.getResponseBodyAsString());
+            
+            if (e.getStatusCode().value() == 429) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+                // Retry at most once, allowing exception to propagate if it fails again
+                return restTemplate.postForObject(url, request, AnalysisResponse.class);
+            }
+            throw e;
+        }
     }
 
     /**

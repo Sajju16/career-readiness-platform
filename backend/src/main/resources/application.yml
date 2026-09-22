@@ -16,6 +16,11 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      keepalive-time: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
 
   # ----- Flyway -----
   flyway:
@@ -76,3 +81,4 @@ logging:
   level:
     root: INFO
     com.careerready: DEBUG
+
