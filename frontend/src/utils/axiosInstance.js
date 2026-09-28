@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 /**
- * Axios Instance – Pre-configured HTTP client
+ * Axios Instance - Pre-configured HTTP client
  *
  * Milestone 1: Base URL and placeholder structure.
  * Milestone 2 additions:
@@ -22,8 +22,10 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken')
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+    
+    // Do not attach token for auth routes to prevent CORS preflight issues
+    if (token && !config.url.includes('/auth/login') && !config.url.includes('/auth/register')) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
     return config
   },
@@ -31,7 +33,7 @@ axiosInstance.interceptors.request.use(
 )
 
 // ---- Response Interceptor ----
-// Handle 401 – trigger token refresh (or logout for now)
+// Handle 401 - trigger token refresh (or logout for now)
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
