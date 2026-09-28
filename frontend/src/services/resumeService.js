@@ -1,15 +1,4 @@
-/**
- * Resume Service – Placeholder
- * Full implementation in Milestone 2.
- *
- * Will provide:
- *  - uploadResume(file) → POST /api/resumes/upload (multipart/form-data)
- *  - getResumes() → GET /api/resumes
- *  - getResume(id) → GET /api/resumes/{id}
- *  - deleteResume(id) → DELETE /api/resumes/{id}
- */
-
-import axiosInstance from '../utils/axiosInstance';
+﻿import axiosInstance from '../utils/axiosInstance';
 
 const resumeService = {
   uploadResume: async (file) => {
@@ -20,7 +9,6 @@ const resumeService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      // You can add onUploadProgress here if needed
     });
     return response.data;
   },
@@ -29,7 +17,7 @@ const resumeService = {
       const response = await axiosInstance.get('/api/resumes/me');
       return response.data;
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      if (error.response && (error.response.status === 404 || error.response.status === 400)) {
         return null;
       }
       throw error;
@@ -41,4 +29,4 @@ const resumeService = {
   }
 }
 
-export default resumeService
+export default resumeService;

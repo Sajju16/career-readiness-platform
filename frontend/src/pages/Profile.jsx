@@ -42,7 +42,7 @@ const Profile = () => {
       const result = await analysisService.analyzeResume();
       setAnalysis(result);
     } catch (err) {
-      setError(err.response?.data || 'Failed to analyze resume. Please ensure you have uploaded a resume and set a career goal.');
+      const data = err.response?.data; let msg = 'Failed to analyze resume. Please ensure you have uploaded a resume and set a career goal.'; if (data) { if (typeof data === 'string' && !data.trim().startsWith('<')) { msg = data; } else if (typeof data === 'object' && data.error && typeof data.error === 'string' && !data.error.trim().startsWith('<')) { msg = data.error; } } setError(msg);
     } finally {
       setAnalyzing(false);
     }
