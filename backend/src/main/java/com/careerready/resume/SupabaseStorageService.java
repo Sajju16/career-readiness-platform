@@ -7,6 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Service
 public class SupabaseStorageService {
@@ -42,6 +43,9 @@ public class SupabaseStorageService {
     }
 
     public String generateSignedUrl(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException("File name cannot be empty");
+        }
         // Extract filename if it was stored as full URL previously
         if (fileName.contains("/")) {
             fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
@@ -58,10 +62,26 @@ public class SupabaseStorageService {
         HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
         try {
-            ResponseEntity<java.util.Map> response = restTemplate.exchange(signUrl, HttpMethod.POST, requestEntity, java.util.Map.class);
+            ResponseEntity<Map> response = restTemplate.exchange(signUrl, HttpMethod.POST, requestEntity, Map.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String signedPath = (String) response.getBody().get("signedURL");
-                return String.format("%s/storage/v1%s", supabaseUrl, signedPath);
+                String signedPath = (String) response.getBody().get("signedUrl");
+                if (signedPath == null) {
+                    signedPath = (String) response.getBody().get("signedURL");
+                }
+                if (signedPath == null) {
+                    throw new RuntimeException("Supabase returned null signedURL");
+                }
+                if (signedPath.startsWith("http://") || signedPath.startsWith("https://")) {
+                    return signedPath;
+                }
+                String baseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.substring(0, supabaseUrl.length() - 1) : supabaseUrl;
+                if (signedPath.startsWith("/storage/v1")) {
+                    return baseUrl + signedPath;
+                }
+                if (!signedPath.startsWith("/")) {
+                    signedPath = "/" + signedPath;
+                }
+                return baseUrl + "/storage/v1" + signedPath;
             }
             throw new RuntimeException("Failed to generate signed URL");
         } catch (Exception e) {
@@ -81,7 +101,6 @@ public class SupabaseStorageService {
         try {
             restTemplate.exchange(deleteUrl, HttpMethod.DELETE, requestEntity, String.class);
         } catch (Exception e) {
-            // Log error but don't fail the transaction, as cleanup failures shouldn't prevent new uploads
             System.err.println("Failed to delete old file from Supabase: " + e.getMessage());
         }
     }
