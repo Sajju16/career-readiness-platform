@@ -153,6 +153,7 @@ export default {
         wider: "0.05em",
         widest: "0.08em",
         eyebrow: "0.12em",
+        "ultra-wide": "0.25em",
       },
       keyframes: {
         "accordion-down": {

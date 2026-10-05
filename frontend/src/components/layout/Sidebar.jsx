@@ -23,7 +23,7 @@ const Sidebar = () => {
   return (
     <aside className="fixed left-0 top-0 h-full w-[280px] bg-surface-container-lowest dark:bg-inverse-surface border-r border-outline-variant dark:border-outline hidden lg:flex flex-col p-stack-md z-50">
       <div className="mb-10 px-4">
-        <h1 className="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed">CareerVelocity</h1>
+        <h1 className="font-headline-md text-headline-md font-light tracking-[0.25em] text-primary dark:text-primary-fixed whitespace-nowrap">CareerVelocity</h1>
         <p className="font-label-md text-label-md text-on-surface-variant">AI Readiness</p>
       </div>
 
