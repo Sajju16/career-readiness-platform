@@ -18,7 +18,7 @@ const Landing = () => {
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary shadow-lg shadow-primary/20">
             <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>speed</span>
           </div>
-          <span className="font-headline-md text-headline-md font-light tracking-[0.25em] text-primary">CareerVelocity</span>
+          <span className="font-headline-md text-headline-md font-medium tracking-[0.25em] text-primary">CareerVelocity</span>
         </div>
         <div className="flex items-center gap-4">
           <Link to="/login" className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">

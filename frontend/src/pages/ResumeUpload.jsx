@@ -205,7 +205,7 @@ const ResumeUpload = () => {
           >
             <span className="relative z-10">{analyzing ? 'Analyzing...' : 'Analyze Resume'}</span>
             <span className={`material-symbols-outlined relative z-10 ${analyzing ? 'animate-spin' : ''}`} style={analyzing ? {} : { fontVariationSettings: "'FILL' 1" }}>
-              {analyzing ? 'sync' : 'sparkles'}
+              {analyzing ? 'sync' : 'auto_awesome'}
             </span>
           </button>
           <p className="text-on-surface-variant font-body-sm text-center max-w-[400px]">

@@ -44,7 +44,7 @@ const Login = () => {
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-stack-sm shadow-lg shadow-primary/20">
             <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>insights</span>
           </div>
-          <h1 className="font-headline-md text-headline-md font-light tracking-[0.25em] text-primary">CareerVelocity</h1>
+          <h1 className="font-headline-md text-headline-md font-medium tracking-[0.25em] text-primary">CareerVelocity</h1>
         </div>
 
         {/* Main Card */}

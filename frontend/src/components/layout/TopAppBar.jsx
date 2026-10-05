@@ -6,19 +6,6 @@ const TopAppBar = ({ title }) => {
           {title}
         </h2>
       </div>
-      <div className="flex items-center gap-4">
-        <button className="p-2 rounded-full hover:bg-surface-container-low transition-colors duration-200 text-on-surface-variant">
-          <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-        </button>
-        <button className="p-2 rounded-full hover:bg-surface-container-low transition-colors duration-200 text-on-surface-variant">
-          <span className="material-symbols-outlined" data-icon="sparkles" data-original-icon="sparkles">sparkles</span>
-        </button>
-        <img
-          className="w-8 h-8 rounded-full border border-outline"
-          alt="User Profile"
-          src="https://ui-avatars.com/api/?name=User&background=4648d4&color=fff"
-        />
-      </div>
     </header>
   );
 };
