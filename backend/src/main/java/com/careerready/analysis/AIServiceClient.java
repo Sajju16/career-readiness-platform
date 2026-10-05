@@ -28,7 +28,8 @@ public class AIServiceClient {
      * M5/M6: resume skill extraction + gap analysis.
      */
     public AnalysisResponse analyzeResume(String resumeUrl, String targetRole, String company) {
-        String url = aiServiceUrl + "/api/analyze/resume";
+        String baseUrl = aiServiceUrl.replaceAll("/+$", "");
+        String url = baseUrl + "/api/analyze/resume";
 
         AIAnalysisRequest request = AIAnalysisRequest.builder()
                 .resume_url(resumeUrl)
@@ -54,7 +55,8 @@ public class AIServiceClient {
             String targetRole,
             String requirementSource) {
 
-        String url = aiServiceUrl + "/api/roadmap/generate";
+        String baseUrl = aiServiceUrl.replaceAll("/+$", "");
+        String url = baseUrl + "/api/roadmap/generate";
 
         AIRoadmapRequest request = AIRoadmapRequest.builder()
                 .missingSkills(missingSkills)
