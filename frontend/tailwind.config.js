@@ -101,7 +101,6 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        // --- Stitch UI Border Radius overrides (will be accessed via arbitrary or explicitly added here if needed) ---
         "xl": "0.75rem",
       },
       spacing: {
@@ -113,25 +112,47 @@ export default {
         "container-max": "1280px",
         "stack-sm": "8px"
       },
+      // --- Intentional Montserrat Font Hierarchy ---
       fontFamily: {
-        "display-lg": ["Inter", "sans-serif"],
-        "label-sm": ["Inter", "sans-serif"],
-        "body-lg": ["Inter", "sans-serif"],
-        "headline-lg": ["Inter", "sans-serif"],
-        "label-md": ["Inter", "sans-serif"],
-        "body-md": ["Inter", "sans-serif"],
-        "headline-md": ["Inter", "sans-serif"],
-        "body-sm": ["Inter", "sans-serif"]
+        sans: ["Montserrat", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        montserrat: ["Montserrat", "sans-serif"],
+        "display-lg": ["Montserrat", "sans-serif"],
+        "display-md": ["Montserrat", "sans-serif"],
+        "headline-lg": ["Montserrat", "sans-serif"],
+        "headline-md": ["Montserrat", "sans-serif"],
+        "headline-sm": ["Montserrat", "sans-serif"],
+        "label-lg": ["Montserrat", "sans-serif"],
+        "label-md": ["Montserrat", "sans-serif"],
+        "label-sm": ["Montserrat", "sans-serif"],
+        "body-lg": ["Montserrat", "sans-serif"],
+        "body-md": ["Montserrat", "sans-serif"],
+        "body-sm": ["Montserrat", "sans-serif"]
       },
+      // --- Architecturally Tuned Font Sizes, Line Heights & Letter Spacing for Montserrat ---
       fontSize: {
-        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.04em", "fontWeight": "600"}],
-        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
-        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-        "label-md": ["14px", {"lineHeight": "1", "letterSpacing": "0.02em", "fontWeight": "600"}],
-        "body-md": ["16px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}],
-        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-        "body-sm": ["14px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400"}]
+        "display-xl": ["54px", { lineHeight: "1.08", letterSpacing: "-0.03em", fontWeight: "800" }],
+        "display-lg": ["44px", { lineHeight: "1.12", letterSpacing: "-0.025em", fontWeight: "700" }],
+        "display-md": ["36px", { lineHeight: "1.18", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-lg": ["30px", { lineHeight: "1.22", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-md": ["22px", { lineHeight: "1.28", letterSpacing: "-0.015em", fontWeight: "600" }],
+        "headline-sm": ["18px", { lineHeight: "1.35", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "label-lg": ["15px", { lineHeight: "1.2", letterSpacing: "0.025em", fontWeight: "600" }],
+        "label-md": ["13px", { lineHeight: "1.2", letterSpacing: "0.045em", fontWeight: "600" }],
+        "label-sm": ["11px", { lineHeight: "1.2", letterSpacing: "0.08em", fontWeight: "700" }],
+        "body-lg": ["18px", { lineHeight: "1.65", letterSpacing: "-0.005em", fontWeight: "400" }],
+        "body-md": ["15px", { lineHeight: "1.6", letterSpacing: "-0.005em", fontWeight: "400" }],
+        "body-sm": ["13px", { lineHeight: "1.55", letterSpacing: "0", fontWeight: "400" }],
+        "caption": ["11px", { lineHeight: "1.45", letterSpacing: "0.02em", fontWeight: "400" }]
+      },
+      letterSpacing: {
+        tightest: "-0.035em",
+        tighter: "-0.025em",
+        tight: "-0.015em",
+        normal: "0",
+        wide: "0.025em",
+        wider: "0.05em",
+        widest: "0.08em",
+        eyebrow: "0.12em",
       },
       keyframes: {
         "accordion-down": {
