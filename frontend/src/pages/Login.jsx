@@ -1,19 +1,31 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('expired') === 'true') {
+      setSessionExpiredMessage('Your session has expired. Please sign in again.');
+      // Clean up the URL parameter without page reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSessionExpiredMessage(null);
     
     if (!email || !password) {
       setError('Please fill in all fields');
@@ -55,6 +67,13 @@ const Login = () => {
             <h2 className="font-headline-lg text-headline-lg text-on-surface mb-stack-sm">Welcome back</h2>
             <p className="font-body-md text-body-md text-on-surface-variant">Sign in to continue your readiness journey.</p>
           </header>
+
+          {sessionExpiredMessage && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm p-3 rounded-xl mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-base">info</span>
+              <span>{sessionExpiredMessage}</span>
+            </div>
+          )}
 
           {error && (
             <div className="bg-error-container/50 border border-error/20 text-error text-sm p-3 rounded-xl mb-6">

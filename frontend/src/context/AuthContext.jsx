@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axiosInstance from '../utils/axiosInstance';
 import authService from '../services/authService';
 
 const AuthContext = createContext();
@@ -8,21 +7,52 @@ export const useAuth = () => {
     return useContext(AuthContext);
 };
 
+// Client-side helper to check if a JWT is expired without external dependencies
+const isTokenExpired = (jwtToken) => {
+    if (!jwtToken) return true;
+    try {
+        const parts = jwtToken.split('.');
+        if (parts.length !== 3) return true;
+        const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            atob(payloadBase64)
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        const decoded = JSON.parse(jsonPayload);
+        return !decoded.exp || decoded.exp * 1000 <= Date.now();
+    } catch {
+        return true;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('accessToken') || null);
+    const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // If we have a token but no user, we could optionally fetch user details here
-        // For now, our login/register returns the user object, so we might just parse the token or rely on localStorage
+        const storedToken = localStorage.getItem('accessToken');
         const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (error) {
-                console.error("Failed to parse stored user", error);
-                logout();
+
+        if (storedToken) {
+            if (isTokenExpired(storedToken)) {
+                // Token is already expired in storage, clean it up proactively
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('user');
+                setToken(null);
+                setUser(null);
+            } else {
+                setToken(storedToken);
+                if (storedUser) {
+                    try {
+                        setUser(JSON.parse(storedUser));
+                    } catch (error) {
+                        console.error("Failed to parse stored user", error);
+                        localStorage.removeItem('user');
+                    }
+                }
             }
         }
         setLoading(false);
@@ -59,7 +89,6 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
-        // Option to redirect to login here or let the ProtectedRoute handle it
     };
 
     const value = {
@@ -68,7 +97,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        isAuthenticated: !!token
+        isAuthenticated: !!token && !isTokenExpired(token)
     };
 
     return (

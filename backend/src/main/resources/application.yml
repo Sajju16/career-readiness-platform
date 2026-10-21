@@ -1,5 +1,5 @@
 # ============================================================
-# AI-Based Career Readiness – Spring Boot Configuration
+# AI-Based Career Readiness — Spring Boot Configuration
 # Active profile: dev (local development)
 # ============================================================
 
@@ -55,7 +55,7 @@ cors:
 # ----- JWT Configuration -----
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:900000}        # 15 minutes
+  access-token-expiry-ms: ${JWT_ACCESS_EXPIRY_MS:86400000}        # 24 hours default for single-token SPA session
   refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY_MS:604800000}   # 7 days
 
 # ----- AI Service -----
@@ -81,4 +81,3 @@ logging:
   level:
     root: INFO
     com.careerready: DEBUG
-
