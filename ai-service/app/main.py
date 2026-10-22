@@ -1,6 +1,6 @@
 """
 AI-Based Career Readiness and Skill Gap Analysis
-FastAPI AI Service – Entry Point
+FastAPI AI Service — Entry Point
 
 Milestone 1: Foundation Setup
 NLP logic, routers, and endpoints will be added in Milestones 3–5.
@@ -9,6 +9,12 @@ NLP logic, routers, and endpoints will be added in Milestones 3–5.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 
 app = FastAPI(
     title="Career Readiness AI Service",
@@ -44,7 +50,7 @@ async def root():
         "health": "/health",
     }
 
-# TODO (Milestone 3): Register extract router
+# Milestone 5: Register analyze router
 from app.routers import analyze
 app.include_router(analyze.router)
 

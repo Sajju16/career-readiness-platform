@@ -24,7 +24,9 @@ public class AnalysisController {
             return ResponseEntity.ok(response);
         } catch (HttpStatusCodeException e) {
             String body = e.getResponseBodyAsString();
-            String message = (body != null && !body.trim().startsWith("<")) ? body : "AI service unavailable. Please try again in a few moments.";
+            String message = (body != null && !body.trim().startsWith("<") && !body.isBlank())
+                    ? body
+                    : "AI service temporarily unavailable. Please try again in a few moments.";
             return ResponseEntity.status(e.getStatusCode()).body(Map.of("error", message));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
